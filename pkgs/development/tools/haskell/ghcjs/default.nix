@@ -16,21 +16,21 @@ let
   libDir = "share/ghcjs/${pkgs.stdenv.system}-${version}-${ghc.ghc.version}/ghcjs";
   ghcjsBoot = fetchgit {
     url = git://github.com/ghcjs/ghcjs-boot.git;
-    rev = "8bf2861c0c776eec42e0a1833f220e36681e810c";
-    sha256 = "0fwnng56d1y98fpp2s9yl9xy21584p7fsszr4m9d3wmjciiazcv2";
+    rev = "67c73ea50b4b2ba174855534bf7a9b5088d86e0d";
+    sha256 = "1f6695f7c25e40b87621ba6ce71a8338788951fd85e88e9223c8258520fbded6";
   };
   shims = fetchgit {
     url = git://github.com/ghcjs/shims.git;
     rev = "5e11d33cb74f8522efca0ace8365c0dc994b10f6";
-    sha256 = "13i78wd064v0nvvx6js5wqw6s01hhf1s7z03c4465xp64a817gk4";
+    sha256 = "64be139022e6f662086103fca3838330006d38e6454bd3f7b66013031a47278e";
   };
   ghcjsPrim = cabal.mkDerivation (self: {
     pname = "ghcjs-prim";
     version = "0.1.0.0";
     src = fetchgit {
       url = git://github.com/ghcjs/ghcjs-prim.git;
-      rev = "915f263c06b7f4a246c6e02ecdf2b9a0550ed967";
-      sha256 = "11ngifn822d8ac5p139g32rafa0wf319yl3blh6piknhwav5ip9l";
+      rev = "8e003e1a1df10233bc3f03d7bbd7d37de13d2a84";
+      sha256 = "ff1a69a38b575d2368dbcfb750d9317dd44d2c8c34183b7dbf95a3a20fca6286";
     };
     buildDepends = [ primitive ];
   });
@@ -39,8 +39,8 @@ in cabal.mkDerivation (self: rec {
   inherit version;
   src = fetchgit {
     url = git://github.com/ghcjs/ghcjs.git;
-    rev = "5c2d279982466e076223fcbe1e1096e22956e5a9";
-    sha256 = "07zpdvpbmk9rg4iwffi7rdjr4icr1j2kkskg2a520ffhid77phqb";
+    rev = "5ea2d2783dfecd6a3d8b13c9568510f8ab48a5de";
+    sha256 = "8eaa036cb51996d3144c43581cd3b195c28cfdbb4831d444e6d6f19499301f27";
   };
   isLibrary = true;
   isExecutable = true;
