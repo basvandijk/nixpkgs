@@ -1,5 +1,5 @@
 diff --git a/src-bin/Boot.hs b/src-bin/Boot.hs
-index 2ed8b4c..e5c05f9 100644
+index 2ed8b4c..cd25fc4 100644
 --- a/src-bin/Boot.hs
 +++ b/src-bin/Boot.hs
 @@ -510,9 +510,7 @@ initPackageDB :: B ()
@@ -12,7 +12,7 @@ index 2ed8b4c..e5c05f9 100644
      initDB dbName db = do
        rm_rf db >> mkdir_p db
        ghcjs_pkg_ ["init", toTextI db] `catchAny_` return ()
-@@ -536,29 +534,21 @@ installDevelopmentTree = subTop $ do
+@@ -536,29 +534,22 @@ installDevelopmentTree = subTop $ do
    msgD info $ "preparing development boot tree"
    checkpoint' "ghcjs-boot-git" "ghcjs-boot repository already cloned and prepared" $ do
      testGit "ghcjs-boot" >>= \case
@@ -20,9 +20,9 @@ index 2ed8b4c..e5c05f9 100644
 -      Just True  -> do
 -        msg info "ghcjs-boot repository already exists but checkpoint not reached, cleaning first, then cloning"
 -        rm_rf "ghcjs-boot"
--        initGhcjsBoot
 +      Just _ -> do
 +        msg info "ghcjs-boot repository already exists; initializing ghcjs-boot"
+         initGhcjsBoot
        Nothing    -> do
          msgD info "cloning ghcjs-boot git repository"
          initGhcjsBoot
@@ -46,7 +46,7 @@ index 2ed8b4c..e5c05f9 100644
        mapM_ patchPackage =<< allPackages
        preparePrimops
        buildGenPrim
-@@ -1093,7 +1083,9 @@ cabalInstallFlags parmakeGhcjs = do
+@@ -1093,7 +1084,9 @@ cabalInstallFlags parmakeGhcjs = do
             , "--builddir",      "dist"
             , "--with-compiler", ghcjs ^. pgmLocText
             , "--with-hc-pkg",   ghcjsPkg ^. pgmLocText
