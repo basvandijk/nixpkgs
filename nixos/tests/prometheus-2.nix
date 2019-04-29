@@ -35,12 +35,76 @@ import ./make-test.nix {
                     expr: count(up{job="prometheus"})
           ''
         ];
+        globalConfig = {
+          external_labels = {
+            some_label = "required by thanos";
+          };
+        };
+        extraFlags = [
+          # Required by thanos
+          "--storage.tsdb.min-block-duration=2h"
+          "--storage.tsdb.max-block-duration=2h"
+        ];
       };
       services.prometheus.pushgateway = {
         enable = true;
         persistMetrics = true;
         persistence.interval = "1s";
         stateDir = "prometheus-pushgateway";
+      };
+      services.thanos = {
+        sidecar = {
+          enable = true;
+          #objstore.config = {
+          #  type = "S3";
+          #  config = {
+          #    bucket = "foo-bucket";
+          #    endpoint = "foo-endpoit";
+          #    region = "eu-central-1";
+          #    access_key = "sdfsdfsdfsdf";
+          #    insecure = false;
+          #    signature_version2 = false;
+          #    encrypt_sse = false;
+          #    secret_key = "dssdfsdfsdfsdfsdf";
+          #    put_user_metadata = {};
+          #    http_config = {
+          #      idle_conn_timeout = "0s";
+          #      insecure_skip_verify = false;
+          #    };
+          #    trace = {
+          #      enable = false;
+          #    };
+          #  };
+          #};
+        };
+        query = {
+          enable = true;
+          http-address = "0.0.0.0:19192";
+          grpc-address = "0.0.0.0:19191";
+          store.addresses = [
+            "localhost:19090"
+          ];
+        };
+        rule = {
+          enable = true;
+          http-address = "0.0.0.0:19194";
+          grpc-address = "0.0.0.0:19193";
+          query.addresses = [
+            "localhost:19192"
+          ];
+          labels = {
+            just = "some";
+            nice = "labels";
+          };
+        };
+        receive = {
+          http-address = "0.0.0.0:19195";
+          enable = true;
+          labels = {
+            just = "some";
+            nice = "labels";
+          };
+        };
       };
     };
   };
@@ -63,5 +127,11 @@ import ./make-test.nix {
 
     # Let's test if the pushgateway persists metrics to the configured location.
     $one->waitUntilSucceeds("test -e /var/lib/prometheus-pushgateway/metrics");
+
+    # Test thanos
+    $one->waitForUnit("thanos-sidecar.service");
+    $one->waitForUnit("thanos-query.service");
+    $one->waitForUnit("thanos-rule.service");
+    $one->waitForUnit("thanos-receive.service");
   '';
 }
