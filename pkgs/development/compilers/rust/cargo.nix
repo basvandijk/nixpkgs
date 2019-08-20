@@ -32,7 +32,7 @@ rustPlatform.buildRustPackage rec {
     # their own certificate chain as environment variables take
     # precedence
     wrapProgram "$out/bin/cargo" \
-      --suffix PATH : "${rustc}/bin" \
+      --set-default RUSTC "${rustc}/bin/rustc" \
       --set CARGO_HTTP_CAINFO "${cacert}/etc/ssl/certs/ca-bundle.crt" \
       --set SSL_CERT_FILE "${cacert}/etc/ssl/certs/ca-bundle.crt"
   '';
