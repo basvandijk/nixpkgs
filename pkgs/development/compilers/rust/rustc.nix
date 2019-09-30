@@ -144,8 +144,6 @@ in stdenv.mkDerivation rec {
     # Disable tests that fail when sandboxing is enabled.
     substituteInPlace src/libstd/sys/unix/ext/net.rs \
         --replace '#[test]' '#[test] #[ignore]'
-    substituteInPlace src/test/run-pass/env-home-dir.rs \
-        --replace 'home_dir().is_some()' true
     rm -v src/test/run-pass/fds-are-cloexec.rs || true  # FIXME: pipes?
     rm -v src/test/ui/run-pass/threads-sendsync/sync-send-in-std.rs || true  # FIXME: ???
   '';
