@@ -35,4 +35,5 @@ in
     ibm = callPackage ./ibm {};
     libvirt = callPackage ./libvirt {};
     ansible = callPackage ./ansible {};
+    proxmox = callPackage ./proxmox {};
   } // lib.mapAttrs (n: v: toDrv v) list
