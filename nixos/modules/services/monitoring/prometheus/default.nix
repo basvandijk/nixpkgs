@@ -43,9 +43,11 @@ let
       else generatedPrometheusYml;
     in promtoolCheck "check config" "prometheus.yml" yml;
 
+  configPath = "/var/lib/prometheus-config/prometheus-substituted.yaml";
+
   cmdlineArgs = cfg.extraFlags ++ [
     "--storage.tsdb.path=${workingDir}/data/"
-    "--config.file=/run/prometheus/prometheus-substituted.yaml"
+    "--config.file=${configPath}"
     "--web.listen-address=${cfg.listenAddress}:${builtins.toString cfg.port}"
     "--alertmanager.notification-queue-capacity=${toString cfg.alertmanagerNotificationQueueCapacity}"
     "--alertmanager.timeout=${toString cfg.alertmanagerTimeout}s"
@@ -698,20 +700,38 @@ in {
       uid = config.ids.uids.prometheus;
       group = "prometheus";
     };
+    systemd.services.prometheus-config = {
+      path = [ pkgs.envsubst ];
+      script = ''
+        envsubst -o "${configPath}" -i "${prometheusYml}"
+        if systemctl --quiet is-active prometheus.service; then
+          systemctl reload prometheus.service
+        fi
+      '';
+      serviceConfig = {
+        User = "prometheus";
+        StateDirectory = "prometheus-config";
+        StateDirectoryMode = "0700";
+        Type = "oneshot";
+        EnvironmentFile = mkIf (cfg.environmentFile != null) [ cfg.environmentFile ];
+      };
+    };
+    systemd.paths = mkIf (cfg.environmentFile != null) {
+      prometheus-config = {
+        pathConfig = { PathChanged = [ cfg.environmentFile ]; };
+      };
+    };
     systemd.services.prometheus = {
       wantedBy = [ "multi-user.target" ];
-      after    = [ "network.target" ];
-      preStart = ''
-         ${lib.getBin pkgs.envsubst}/bin/envsubst -o "/run/prometheus/prometheus-substituted.yaml" \
-                                                  -i "${prometheusYml}"
-      '';
+      wants    = [ "prometheus-config.service" ];
+      after    = [ "network.target" "prometheus-config.service" ];
       serviceConfig = {
         ExecStart = "${cfg.package}/bin/prometheus" +
           optionalString (length cmdlineArgs != 0) (" \\\n  " +
             concatStringsSep " \\\n  " cmdlineArgs);
+        ExecReload = "${pkgs.coreutils}/bin/kill -HUP $MAINPID";
         User = "prometheus";
         Restart  = "always";
-        EnvironmentFile = mkIf (cfg.environmentFile != null) [ cfg.environmentFile ];
         RuntimeDirectory = "prometheus";
         RuntimeDirectoryMode = "0700";
         WorkingDirectory = workingDir;
