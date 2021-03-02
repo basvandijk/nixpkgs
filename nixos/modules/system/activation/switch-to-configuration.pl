@@ -225,7 +225,11 @@ while (my ($unit, $state) = each %{$activePrev}) {
                 elsif (!boolIsTrue($unitInfo->{'X-RestartIfChanged'} // "yes") || boolIsTrue($unitInfo->{'RefuseManualStop'} // "no") || boolIsTrue($unitInfo->{'X-OnlyManualStart'} // "no")) {
                     $unitsToSkip{$unit} = 1;
                 } else {
-                    if (!boolIsTrue($unitInfo->{'X-StopIfChanged'} // "yes")) {
+                    if (!boolIsTrue($unitInfo->{'X-StopIfChanged'} // "yes") ||
+                          # Changed oneshot services which RemainAfterExit should be restarted instead of stopped and started.
+                          # Because stopping them won't have an effect since the service has already exited.
+                          # Starting them also doesn't have an effect since the service is still active.
+                          (($unitInfo->{'Type'} // "") eq "oneshot" && boolIsTrue($unitInfo->{'RemainAfterExit'} // "no"))) {
                         # This unit should be restarted instead of
                         # stopped and started.
                         $unitsToRestart{$unit} = 1;

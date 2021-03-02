@@ -7,11 +7,29 @@ import ./make-test-python.nix ({ pkgs, ...} : {
   };
 
   nodes = {
-    machine = { ... }: {
+    machine = { pkgs, ... }: {
       users.mutableUsers = false;
+
+      systemd.services.oneshotRemainAfterExit = {
+        wantedBy = [ "multi-user.target" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = "${pkgs.hello}/bin/hello"
+        };
+      };
     };
     other = { ... }: {
       users.mutableUsers = true;
+
+      systemd.services.oneshotRemainAfterExit = {
+        wantedBy = [ "multi-user.target" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          # This change should cause the service to be restarted:
+          ExecStart = "${pkgs.hello}/bin/hello -g 'I got restarted'"
+        };
     };
   };
 
@@ -33,6 +51,9 @@ import ./make-test-python.nix ({ pkgs, ...} : {
     )
     machine.succeed(
         "${stderrRunner} ${otherSystem}/bin/switch-to-configuration test"
+    )
+    machine.wait_until_succeeds(
+        "journalctl -u oneshotRemainAfterExit | grep 'I got restarted'"
     )
   '';
 })
